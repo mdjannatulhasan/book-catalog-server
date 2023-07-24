@@ -1,50 +1,52 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 // import config from '../../../config';
-import { catchAsync } from '../../../shared/catchAsync';
-import { sendResponse } from '../../../shared/sendResponse';
-import { AuthService } from './auth.service';
-import config from '../../../config';
+import { catchAsync } from "../../../shared/catchAsync";
+import { sendResponse } from "../../../shared/sendResponse";
+import { AuthService } from "./auth.service";
+import config from "../../../config";
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
-    const { ...loginData } = req.body;
-    const result = await AuthService.loginUser(loginData);
-    const { refreshToken, ...others } = result;
+	const { ...loginData } = req.body;
+	console.log("loginData", req.body);
 
-    const cookieOptions = {
-        secure: config.env === 'production',
-        httpOnly: true,
-    };
+	const result = await AuthService.loginUser(loginData);
+	const { refreshToken, ...others } = result;
 
-    res.cookie('refreshToken', refreshToken, cookieOptions);
+	const cookieOptions = {
+		secure: config.env === "production",
+		httpOnly: true,
+	};
 
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: 'User Logged in successfully!',
-        data: others,
-    });
+	res.cookie("refreshToken", refreshToken, cookieOptions);
+
+	sendResponse(res, {
+		statusCode: 200,
+		success: true,
+		message: "User Logged in successfully!",
+		data: others,
+	});
 });
 
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-    const { refreshToken } = req.cookies;
-    const result = await AuthService.refreshToken(refreshToken);
+	const { refreshToken } = req.cookies;
+	const result = await AuthService.refreshToken(refreshToken);
 
-    const cookieOptions = {
-        secure: config.env === 'production',
-        httpOnly: true,
-    };
+	const cookieOptions = {
+		secure: config.env === "production",
+		httpOnly: true,
+	};
 
-    res.cookie('refreshToken', refreshToken, cookieOptions);
+	res.cookie("refreshToken", refreshToken, cookieOptions);
 
-    sendResponse(res, {
-        statusCode: 200,
-        success: true,
-        message: 'New access token generated successfully!',
-        data: result,
-    });
+	sendResponse(res, {
+		statusCode: 200,
+		success: true,
+		message: "New access token generated successfully!",
+		data: result,
+	});
 });
 
 export const AuthController = {
-    loginUser,
-    refreshToken,
+	loginUser,
+	refreshToken,
 };

@@ -1,4 +1,4 @@
 export type ILoginUser = {
-    phoneNumber: string;
-    password: string;
+	email: string;
+	password: string;
 };
