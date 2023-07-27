@@ -19,6 +19,7 @@ const loginUser = async (payload: ILoginUser) => {
 	// let newUserAllData = null;
 
 	const isUserExists = (await user.isUserExists(email)) as ExtendedIUser;
+	console.log(isUserExists);
 
 	if (!isUserExists) {
 		throw new ApiError(httpStatus.NOT_FOUND, "User not exists");
@@ -31,7 +32,7 @@ const loginUser = async (payload: ILoginUser) => {
 	}
 	const accessToken = jwtHelpers.createToken(
 		{
-			_id: isUserExists._id,
+			email: isUserExists.email,
 		},
 		config.jwt.secret as Secret,
 		{
@@ -40,7 +41,7 @@ const loginUser = async (payload: ILoginUser) => {
 	);
 	const refreshToken = jwtHelpers.createToken(
 		{
-			_id: isUserExists._id,
+			email: isUserExists.email,
 		},
 		config.jwt.refresh_secret as Secret,
 		{
@@ -62,9 +63,10 @@ const refreshToken = async (token: string) => {
 		throw new ApiError(httpStatus.FORBIDDEN, "Refresh Token is invalid");
 	}
 
-	const { _id, role } = verifiedToken;
+	const { email } = verifiedToken;
 
-	const isUserExists = user.isUserExists(_id);
+	const isUserExists = user.isUserExists(email);
+	console.log(isUserExists);
 
 	if (!isUserExists) {
 		throw new ApiError(httpStatus.NOT_FOUND, "User does not exist");
@@ -72,8 +74,7 @@ const refreshToken = async (token: string) => {
 
 	const accessToken = jwtHelpers.createToken(
 		{
-			_id: _id,
-			role: role,
+			email: email,
 		},
 		config.jwt.refresh_secret as Secret,
 		{
