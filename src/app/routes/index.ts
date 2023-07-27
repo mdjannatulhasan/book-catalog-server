@@ -1,34 +1,24 @@
-import express from 'express';
-import { UserRoutes } from '../modules/users/users.route';
-import { CowRoutes } from '../modules/cow/cow.route';
-import { OrderRoutes } from '../modules/order/order.route';
-import { AuthRoutes } from '../modules/auth/auth.route';
-import { AdminRoutes } from '../modules/admin/admin.route';
+import express from "express";
+import { UserRoutes } from "../modules/users/users.route";
+import { BookRoutes } from "../modules/book/book.route";
+import { AuthRoutes } from "../modules/auth/auth.route";
 
 const router = express.Router();
 
 const moduleRoutes = [
-    {
-        path: '/users',
-        route: UserRoutes,
-    },
-    {
-        path: '/cows',
-        route: CowRoutes,
-    },
-    {
-        path: '/orders',
-        route: OrderRoutes,
-    },
-    {
-        path: '/auth',
-        route: AuthRoutes,
-    },
-    {
-        path: '/admins',
-        route: AdminRoutes,
-    },
+	{
+		path: "/users",
+		route: UserRoutes,
+	},
+	{
+		path: "/books",
+		route: BookRoutes,
+	},
+	{
+		path: "/auth",
+		route: AuthRoutes,
+	},
 ];
-moduleRoutes.forEach(route => router.use(route.path, route.route));
+moduleRoutes.forEach((route) => router.use(route.path, route.route));
 
 export default router;
