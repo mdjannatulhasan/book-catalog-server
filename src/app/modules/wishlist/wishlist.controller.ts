@@ -9,9 +9,13 @@ import { IWishlist } from "./wishlist.interface";
 
 const createWishlist: RequestHandler = async (req, res, next) => {
 	try {
-		const { ...bookData } = req.body;
+		const id = req.params.id;
+		const user = req.user;
+		console.log(user);
+		console.log("asad");
 
-		const result = await WishlistService.createWishlist(bookData);
+		const result = await WishlistService.createWishlist(user, id);
+
 		sendResponse<IWishlist>(res, {
 			success: true,
 			statusCode: httpStatus.OK,

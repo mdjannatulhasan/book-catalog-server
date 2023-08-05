@@ -4,17 +4,15 @@ import { IUser } from "../users/users.interface";
 import { IBook } from "../book/book.interface";
 
 export type IWishlist = {
-	book: Types.ObjectId | IBook;
 	user: Types.ObjectId | IUser;
-	wishlist: string[];
+	wishlist: Types.ObjectId[] | IBook[];
 	otherList: object;
 };
 
 export type WishlistModel = Model<IWishlist, object>;
 
 export type ITokenInfo = {
-	_id: string;
-	role: string;
+	email: string;
 	iat: number;
 	exp: number;
 };

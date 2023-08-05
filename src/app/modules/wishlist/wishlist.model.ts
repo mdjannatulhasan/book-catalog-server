@@ -3,11 +3,6 @@ import { IWishlist, WishlistModel } from "./wishlist.interface";
 
 export const WishlistSchema = new Schema<IWishlist, WishlistModel>(
 	{
-		book: {
-			type: Types.ObjectId,
-			ref: "Book",
-			required: true,
-		},
 		user: {
 			type: Types.ObjectId,
 			ref: "User",
@@ -15,7 +10,8 @@ export const WishlistSchema = new Schema<IWishlist, WishlistModel>(
 		},
 		wishlist: [
 			{
-				type: String,
+				type: Types.ObjectId,
+				ref: "Book",
 				required: true,
 			},
 		],

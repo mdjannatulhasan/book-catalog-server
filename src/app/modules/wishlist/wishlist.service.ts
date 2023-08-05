@@ -5,11 +5,19 @@ import { IWishlist, ITokenInfo } from "./wishlist.interface";
 import { IPaginationOptions } from "../../interfaces/pagination";
 import { IGenericResponse } from "../../interfaces/common";
 import { paginationHelpers } from "../../../helpers/paginationHelpers";
-import mongoose, { SortOrder } from "mongoose";
+import mongoose, { SortOrder, Types } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import httpStatus from "http-status";
+import { User } from "../users/users.model";
+import { JwtPayload } from "jsonwebtoken";
+import { Book } from "../book/book.model";
+import { IBook } from "../book/book.interface";
 
-const createWishlist = async (book: IWishlist): Promise<IWishlist | null> => {
+function isIdInArray(array: Array<any>, id: Types.ObjectId): boolean {
+	return array.some((item) => item instanceof Types.ObjectId && item.equals(id));
+}
+
+const createWishlist = async (user: JwtPayload, book: string): Promise<IWishlist | null> => {
 	let newWishlistAllData = null;
 
 	const session = await mongoose.startSession();
@@ -17,13 +25,33 @@ const createWishlist = async (book: IWishlist): Promise<IWishlist | null> => {
 	try {
 		session.startTransaction();
 
-		const newWishlist = await Wishlist.create([book], { session });
-
-		if (!newWishlist.length) {
-			throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create book");
+		const userExist = await User.findOne({ email: user.email });
+		if (!userExist) {
+			throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid User data");
+		}
+		const bookExist = await Book.findById(book);
+		if (!bookExist) {
+			throw new ApiError(httpStatus.BAD_REQUEST, "No book exists");
 		}
 
-		newWishlistAllData = newWishlist[0];
+		const isWishlistExists = await Wishlist.findOne({ user: userExist._id });
+
+		if (!isWishlistExists) {
+			const newWishlist = await Wishlist.create([{ user: userExist?._id, wishlist: [book] }], { session });
+
+			if (!newWishlist.length) {
+				throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create wishlist");
+			}
+			newWishlistAllData = newWishlist[0];
+		} else {
+			const bookId = new mongoose.Types.ObjectId(book);
+
+			if (isIdInArray(isWishlistExists.wishlist, bookId)) {
+				newWishlistAllData = await Wishlist.updateOne({ user: userExist._id }, { $pull: { wishlist: bookExist._id } }, { new: true });
+			} else {
+				newWishlistAllData = await Wishlist.updateOne({ user: userExist._id }, { $push: { wishlist: book } }, { new: true });
+			}
+		}
 
 		await session.commitTransaction();
 		await session.endSession();
@@ -33,7 +61,7 @@ const createWishlist = async (book: IWishlist): Promise<IWishlist | null> => {
 		throw error;
 	}
 
-	return newWishlistAllData;
+	return newWishlistAllData as IWishlist;
 };
 
 const getAllWishlist = async (paginationOptions: IPaginationOptions): Promise<IGenericResponse<IWishlist[]> | null> => {
