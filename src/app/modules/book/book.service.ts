@@ -16,6 +16,9 @@ const createBook = async (book: IBook): Promise<IBook | null> => {
 
 	const session = await mongoose.startSession();
 
+	book.price = book.price || 0;
+	book.code = book.code || "";
+
 	try {
 		session.startTransaction();
 

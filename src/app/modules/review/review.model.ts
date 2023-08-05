@@ -1,16 +1,16 @@
 import { Schema, model } from "mongoose";
-import { OrderModel, IOrder } from "./review.interface";
+import { ReviewModel, IReview } from "./review.interface";
+import { string } from "zod";
 
-export const OrderSchema = new Schema<IOrder, OrderModel>(
+export const ReviewSchema = new Schema<IReview, ReviewModel>(
 	{
 		book: {
 			type: Schema.Types.ObjectId,
 			ref: "Book",
 			required: true,
 		},
-		buyer: {
-			type: Schema.Types.ObjectId,
-			ref: "User",
+		reviews: {
+			type: [String],
 			required: true,
 		},
 	},
@@ -22,4 +22,4 @@ export const OrderSchema = new Schema<IOrder, OrderModel>(
 	}
 );
 
-export const Order = model<IOrder, OrderModel>("Order", OrderSchema);
+export const Review = model<IReview, ReviewModel>("Review", ReviewSchema);

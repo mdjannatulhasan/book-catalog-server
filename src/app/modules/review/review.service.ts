@@ -1,61 +1,47 @@
 /* eslint-disable no-undefined */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Order } from "./review.model";
-import { IOrder } from "./review.interface";
+import { Review } from "./review.model";
+import { IReview } from "./review.interface";
 import { IPaginationOptions } from "../../interfaces/pagination";
 import { IGenericResponse } from "../../interfaces/common";
 import { paginationHelpers } from "../../../helpers/paginationHelpers";
 import mongoose, { SortOrder } from "mongoose";
-// import { orderSearchableFields } from './order.constant';
 import ApiError from "../../../errors/ApiError";
 import httpStatus from "http-status";
-import { User } from "../users/users.model";
 import { Book } from "../book/book.model";
-import { BookLabel, IBook, ITokenInfo } from "../book/book.interface";
-import { ExtendedIUser } from "../users/users.interface";
-import { ENUM_USER_ROLE } from "../../../enums/user";
+import { ITokenInfo } from "../book/book.interface";
 
-const createOrder = async (order: IOrder): Promise<IOrder | null> => {
-	let newOrderAllData = null;
+type IReviewReq = {
+	book: string;
+	reviews: string;
+};
+const createReview = async (review: IReviewReq): Promise<IReview | null> => {
+	let newReviewAllData = null;
 
 	const session = await mongoose.startSession();
 
 	try {
 		session.startTransaction();
 
-		const buyer = await User.findById(order.buyer);
-
-		if (buyer?.role !== "buyer") {
-			throw new ApiError(httpStatus.BAD_REQUEST, "Please Select a buyer");
-		}
-
-		const book = await Book.findById(order.book);
+		const book = await Book.findById(review.book);
 
 		if (!book) {
 			throw new ApiError(httpStatus.BAD_REQUEST, "Please Select a Book");
 		}
 
-		if ((book as IBook).label === BookLabel.SoldOut) {
-			throw new ApiError(httpStatus.BAD_REQUEST, "Book has been sold already");
-		} else if ((book as IBook).price > buyer.budget) {
-			throw new ApiError(httpStatus.BAD_REQUEST, "Buyer don't have enough money to buy this book");
+		const existingBookInReviews = await Review.findOne({ book: book._id });
+
+		if (!existingBookInReviews) {
+			newReviewAllData = await Review.create([{ book: review.book, reviews: [review.reviews] }], { session });
+		} else {
+			await Review.updateOne({ book: book._id }, { $push: { reviews: review.reviews } }, { new: true });
+
+			newReviewAllData = await Review.findOne({ book: review.book });
 		}
 
-		const updatedBook = await Book.findOneAndUpdate({ _id: order.book }, { label: BookLabel.SoldOut }, { new: true });
-
-		const seller = await User.findById(book?.seller);
-
-		const updatedSeller = await User.findOneAndUpdate({ _id: book?.seller }, { income: Number(seller?.income) + Number(book?.price) }, { new: true });
-
-		const updatedBuyer = await User.findOneAndUpdate({ _id: order?.buyer }, { budget: Number(buyer?.budget) - Number(book?.price) }, { new: true });
-
-		const newOrder = await Order.create([order], { session });
-
-		if (!newOrder.length || !updatedBook || !updatedSeller || !updatedBuyer) {
-			throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create order");
+		if (!newReviewAllData) {
+			throw new ApiError(httpStatus.BAD_REQUEST, "Failed to add review");
 		}
-
-		newOrderAllData = newOrder[0];
 
 		await session.commitTransaction();
 		await session.endSession();
@@ -65,22 +51,12 @@ const createOrder = async (order: IOrder): Promise<IOrder | null> => {
 		throw error;
 	}
 
-	if (newOrderAllData) {
-		newOrderAllData = await Order.findById(newOrderAllData.id)
-			.populate("buyer")
-			.populate({
-				path: "book",
-				populate: [
-					{
-						path: "seller",
-					},
-				],
-			});
-	}
-
-	return newOrderAllData;
+	return newReviewAllData as IReview;
 };
-const getAllOrder = async (paginationOptions: IPaginationOptions, userInfo: Partial<ITokenInfo>): Promise<IGenericResponse<IOrder[]> | null> => {
+
+const getAllReview = async (bookId: string, paginationOptions: IPaginationOptions): Promise<IGenericResponse<IReview[]> | null> => {
+	console.log("call review");
+
 	const { skip, page, limit, sortBy, sortOrder } = paginationHelpers.calculatePagination(paginationOptions);
 
 	const sortConditions: { [key: string]: SortOrder } = {};
@@ -89,35 +65,11 @@ const getAllOrder = async (paginationOptions: IPaginationOptions, userInfo: Part
 		sortConditions[sortBy] = sortOrder;
 	}
 
-	let filter = {};
+	const filter = { book: bookId };
 
-	if (userInfo.role !== ENUM_USER_ROLE.ADMIN && userInfo.role !== ENUM_USER_ROLE.BUYER) {
-		filter = {
-			// $or: [{ 'book.seller': userInfo._id }],
-		};
-	}
+	let result = await Review.find(filter).sort(sortConditions).skip(skip).limit(limit);
 
-	let result = await Order.find(filter)
-		.populate("buyer")
-		.populate({
-			path: "book",
-			populate: [
-				{
-					path: "seller",
-				},
-			],
-		})
-		.sort(sortConditions)
-		.skip(skip)
-		.limit(limit);
-
-	if (userInfo.role == ENUM_USER_ROLE.SELLER) {
-		result = result.filter((order) => {
-			return order.book && ((order.book as IBook).seller as ExtendedIUser)._id.toString() === userInfo._id;
-		});
-	}
-
-	const total = await Order.countDocuments();
+	const total = await Review.countDocuments(filter);
 
 	return {
 		data: result,
@@ -129,8 +81,8 @@ const getAllOrder = async (paginationOptions: IPaginationOptions, userInfo: Part
 	};
 };
 
-const getSingleOrder = async (id: string, userInfo: Partial<ITokenInfo>): Promise<IOrder | null> => {
-	let result = await Order.findById(id)
+const getSingleReview = async (id: string, userInfo: Partial<ITokenInfo>): Promise<IReview | null> => {
+	let result = await Review.findById(id)
 		.populate("buyer")
 		.populate({
 			path: "book",
@@ -141,49 +93,33 @@ const getSingleOrder = async (id: string, userInfo: Partial<ITokenInfo>): Promis
 			],
 		});
 
-	if (userInfo.role !== ENUM_USER_ROLE.ADMIN) {
-		if (userInfo.role === ENUM_USER_ROLE.BUYER && (result?.buyer as ExtendedIUser)._id.toString() !== userInfo._id) {
-			result = null;
-		} else if (userInfo.role === ENUM_USER_ROLE.SELLER && ((result?.book as IBook).seller as ExtendedIUser)._id.toString() !== userInfo._id) {
-			result = null;
-		}
-	}
-
 	return result;
 };
 
-const updateOrder = async (id: string, payload: Partial<IOrder>): Promise<IOrder | null> => {
-	const isExist = await Order.findById(id);
+const updateReview = async (id: string, payload: Partial<IReview>): Promise<IReview | null> => {
+	const isExist = await Review.findById(id);
 
 	if (!isExist) {
-		throw new ApiError(httpStatus.NOT_FOUND, "Order not found!");
+		throw new ApiError(httpStatus.NOT_FOUND, "Review not found!");
 	}
 
-	if (payload.buyer) {
-		const isBuyer = await User.findById(payload.buyer);
-
-		if (isBuyer?.role !== "buyer") {
-			throw new ApiError(httpStatus.BAD_REQUEST, "Please insert a buyer");
-		}
-	}
-
-	const result = await Order.findOneAndUpdate({ _id: id }, payload, {
+	const result = await Review.findOneAndUpdate({ _id: id }, payload, {
 		new: true,
 	});
 
 	return result;
 };
 
-const deleteOrder = async (id: string): Promise<IOrder | null> => {
-	const result = await Order.findByIdAndDelete(id).populate("buyer");
+const deleteReview = async (id: string): Promise<IReview | null> => {
+	const result = await Review.findByIdAndDelete(id).populate("buyer");
 
 	return result;
 };
 
-export const OrderService = {
-	createOrder,
-	getAllOrder,
-	getSingleOrder,
-	updateOrder,
-	deleteOrder,
+export const ReviewService = {
+	createReview,
+	getAllReview,
+	getSingleReview,
+	updateReview,
+	deleteReview,
 };

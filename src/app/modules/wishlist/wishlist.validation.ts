@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const createBookZodSchema = z.object({
+const createWishlistZodSchema = z.object({
 	body: z.object({
 		code: z.string().optional(),
 		title: z.string({
@@ -21,7 +21,7 @@ const createBookZodSchema = z.object({
 	}),
 });
 
-const updateBookZodSchema = z.object({
+const updateWishlistZodSchema = z.object({
 	body: z.object({
 		code: z.string().optional(),
 		title: z.string(),
@@ -34,7 +34,7 @@ const updateBookZodSchema = z.object({
 	}),
 });
 
-export const BookValidation = {
-	createBookZodSchema,
-	updateBookZodSchema,
+export const WishlistValidation = {
+	createWishlistZodSchema,
+	updateWishlistZodSchema,
 };

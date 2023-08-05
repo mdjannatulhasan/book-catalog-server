@@ -1,21 +1,20 @@
 import { Request, RequestHandler, Response } from "express";
-import { OrderService } from "./review.service";
+import { ReviewService } from "./review.service";
 import { catchAsync } from "../../../shared/catchAsync";
 import { sendResponse } from "../../../shared/sendResponse";
 import httpStatus from "http-status";
 import { pick } from "../../../shared/pick";
 import { pagination } from "../../constants/pagination";
-import { IOrder } from "./review.interface";
+import { IReview } from "./review.interface";
 
-const createOrder: RequestHandler = async (req, res, next) => {
+const createReview: RequestHandler = async (req, res, next) => {
 	try {
-		const { ...orderData } = req.body;
-
-		const result = await OrderService.createOrder(orderData);
-		sendResponse<IOrder>(res, {
+		const { ...reviewData } = req.body;
+		const result = await ReviewService.createReview(reviewData);
+		sendResponse<IReview>(res, {
 			success: true,
 			statusCode: httpStatus.OK,
-			message: "Order Created successfully",
+			message: "Review Created successfully",
 			meta: null,
 			data: result,
 		});
@@ -24,65 +23,79 @@ const createOrder: RequestHandler = async (req, res, next) => {
 	}
 };
 
-const getAllOrder = catchAsync(async (req: Request, res: Response) => {
+const getAllReview = catchAsync(async (req: Request, res: Response) => {
 	const paginationOptions = pick(req.query, pagination);
-	const userInfo = req.user;
-	const result = await OrderService.getAllOrder(paginationOptions, userInfo);
+	const bookId = req.params.id;
+	const result = await ReviewService.getAllReview(bookId, paginationOptions);
 
-	sendResponse<IOrder[]>(res, {
+	sendResponse<IReview[]>(res, {
 		statusCode: httpStatus.OK,
 		success: true,
-		message: "Orders retrived successfully",
+		message: "Reviews retrived successfully",
 		meta: result?.meta || null,
 		data: result?.data,
 	});
 });
 
-const getSingleOrder = catchAsync(async (req: Request, res: Response) => {
+const getSingleReview = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id;
 	const user = req.user;
-	const result = await OrderService.getSingleOrder(id, user);
+	const result = await ReviewService.getSingleReview(id, user);
 
-	sendResponse<IOrder>(res, {
+	sendResponse<IReview>(res, {
 		statusCode: httpStatus.OK,
 		success: true,
-		message: "Order retrived successfully",
+		message: "Review retrived successfully",
 		data: result,
 	});
 });
 
-const updateOrder = catchAsync(async (req: Request, res: Response) => {
+const getBookReview = catchAsync(async (req: Request, res: Response) => {
+	const id = req.params.id;
+	const user = req.user;
+	const result = await ReviewService.getSingleReview(id, user);
+
+	sendResponse<IReview>(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Review retrived successfully",
+		data: result,
+	});
+});
+
+const updateReview = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id;
 
-	const updatedData = req.body as Partial<IOrder>;
+	const updatedData = req.body as Partial<IReview>;
 
-	const result = await OrderService.updateOrder(id, updatedData);
+	const result = await ReviewService.updateReview(id, updatedData);
 
-	sendResponse<IOrder>(res, {
+	sendResponse<IReview>(res, {
 		statusCode: httpStatus.OK,
 		success: true,
-		message: "Order updated successfully",
+		message: "Review updated successfully",
 		data: result,
 	});
 });
 
-const deleteOrder = catchAsync(async (req: Request, res: Response) => {
+const deleteReview = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id;
 
-	const result = await OrderService.deleteOrder(id);
+	const result = await ReviewService.deleteReview(id);
 
-	sendResponse<IOrder>(res, {
+	sendResponse<IReview>(res, {
 		statusCode: httpStatus.OK,
 		success: true,
-		message: "Order Deleted successfully",
+		message: "Review Deleted successfully",
 		data: result,
 	});
 });
 
-export const OrderController = {
-	createOrder,
-	getAllOrder,
-	getSingleOrder,
-	updateOrder,
-	deleteOrder,
+export const ReviewController = {
+	createReview,
+	getAllReview,
+	getSingleReview,
+	updateReview,
+	deleteReview,
+	getBookReview,
 };

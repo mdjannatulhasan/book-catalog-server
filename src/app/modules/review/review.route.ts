@@ -1,18 +1,19 @@
 import express from "express";
 import validateRequest from "../../middlewares/validateRequest";
-import { OrderValidation } from "./review.validation";
-import { OrderController } from "./review.controller";
+import { ReviewValidation } from "./review.validation";
+import { ReviewController } from "./review.controller";
 import auth from "../../middlewares/auth";
 import { ENUM_USER_ROLE } from "../../../enums/user";
 
 const router = express.Router();
 
-router.post("/", validateRequest(OrderValidation.createOrderZodSchema), auth(ENUM_USER_ROLE.BUYER), OrderController.createOrder);
+router.post("/", validateRequest(ReviewValidation.createReviewZodSchema), auth(), ReviewController.createReview);
 
-router.get("/:id", auth(ENUM_USER_ROLE.BUYER, ENUM_USER_ROLE.SELLER, ENUM_USER_ROLE.ADMIN), OrderController.getSingleOrder);
+// router.get("/:id", auth(), ReviewController.getSingleReview);
+router.get("/:id", ReviewController.getAllReview);
 
-// router.delete('/:id', OrderController.deleteOrder);
+// router.delete('/:id', ReviewController.deleteReview);
 
-router.get("/", auth(ENUM_USER_ROLE.BUYER, ENUM_USER_ROLE.SELLER, ENUM_USER_ROLE.ADMIN), OrderController.getAllOrder);
+// router.get("/", auth(), ReviewController.getAllReview);
 
-export const OrderRoutes = router;
+export const ReviewRoutes = router;

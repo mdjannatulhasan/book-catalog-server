@@ -3,13 +3,13 @@ import { Model, Types } from "mongoose";
 import { IUser } from "../users/users.interface";
 import { IBook } from "../book/book.interface";
 
-export type IOrder = {
+export type IReview = {
 	book: Types.ObjectId | IBook;
-	buyer: Types.ObjectId | IUser;
+	reviews: string[];
 };
 
-export type OrderModel = Model<IOrder, object>;
+export type ReviewModel = Model<IReview, object>;
 
-export type IOrderFilters = {
+export type IReviewFilters = {
 	searchTerm: string;
 };

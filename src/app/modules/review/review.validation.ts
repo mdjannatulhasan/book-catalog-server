@@ -1,20 +1,16 @@
 import { z } from "zod";
 
-const createOrderZodSchema = z.object({
+const createReviewZodSchema = z.object({
 	body: z.object({
-		book: z
-			.string({
-				required_error: "Book is required",
-			})
-			.min(1),
-		buyer: z
-			.string({
-				required_error: "Buyer is required",
-			})
-			.min(1),
+		book: z.string({
+			required_error: "Book is required",
+		}),
+		reviews: z.string({
+			required_error: "Review is required",
+		}),
 	}),
 });
 
-export const OrderValidation = {
-	createOrderZodSchema,
+export const ReviewValidation = {
+	createReviewZodSchema,
 };

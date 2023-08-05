@@ -42,6 +42,7 @@ const getAllBook = catchAsync(async (req: Request, res: Response) => {
 
 const getSingleBook = catchAsync(async (req: Request, res: Response) => {
 	const id = req.params.id;
+	console.log(id);
 
 	const result = await BookService.getSingleBook(id);
 
