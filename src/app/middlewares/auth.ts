@@ -5,8 +5,6 @@ import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import config from "../../config";
 
 const auth = () => async (req: Request, res: Response, next: NextFunction) => {
-	console.log("auth");
-
 	try {
 		const token = req.headers.authorization;
 

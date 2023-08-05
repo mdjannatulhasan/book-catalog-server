@@ -64,7 +64,7 @@ const createWishlist = async (user: JwtPayload, book: string): Promise<IWishlist
 	return newWishlistAllData as IWishlist;
 };
 
-const getAllWishlist = async (paginationOptions: IPaginationOptions): Promise<IGenericResponse<IWishlist[]> | null> => {
+const getAllWishlist = async (paginationOptions: IPaginationOptions, user: JwtPayload): Promise<IGenericResponse<IWishlist[]> | null> => {
 	const { skip, page, limit, sortBy, sortOrder } = paginationHelpers.calculatePagination(paginationOptions);
 
 	const sortConditions: { [key: string]: SortOrder } = {};
@@ -72,8 +72,17 @@ const getAllWishlist = async (paginationOptions: IPaginationOptions): Promise<IG
 	if (sortBy && sortConditions) {
 		sortConditions[sortBy] = sortOrder;
 	}
+	const isUserExists = await User.findOne({ email: user.email });
 
-	const result = await Wishlist.find({}).sort(sortConditions).skip(skip).limit(limit);
+	if (!isUserExists) {
+		throw new ApiError(httpStatus.UNAUTHORIZED, "Invalid User data");
+	}
+
+	const result = await Wishlist.find({ user: isUserExists._id }).populate({
+		path: "wishlist",
+		model: "Book",
+	});
+	// const result = await Wishlist.find({}).sort(sortConditions).skip(skip).limit(limit);
 
 	const total = await Wishlist.countDocuments();
 

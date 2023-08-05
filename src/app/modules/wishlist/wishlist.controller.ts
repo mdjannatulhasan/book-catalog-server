@@ -11,8 +11,6 @@ const createWishlist: RequestHandler = async (req, res, next) => {
 	try {
 		const id = req.params.id;
 		const user = req.user;
-		console.log(user);
-		console.log("asad");
 
 		const result = await WishlistService.createWishlist(user, id);
 
@@ -30,8 +28,8 @@ const createWishlist: RequestHandler = async (req, res, next) => {
 
 const getAllWishlist = catchAsync(async (req: Request, res: Response) => {
 	const paginationOptions = pick(req.query, pagination);
-
-	const result = await WishlistService.getAllWishlist(paginationOptions);
+	const user = req.user;
+	const result = await WishlistService.getAllWishlist(paginationOptions, user);
 
 	sendResponse<IWishlist[]>(res, {
 		statusCode: httpStatus.OK,

@@ -14,6 +14,6 @@ router.patch("/", validateRequest(WishlistValidation.updateWishlistZodSchema), W
 
 router.delete("/:id", WishlistController.deleteWishlist);
 
-router.get("/", WishlistController.getAllWishlist);
+router.get("/", auth(), WishlistController.getAllWishlist);
 
 export const WishlistRoutes = router;
