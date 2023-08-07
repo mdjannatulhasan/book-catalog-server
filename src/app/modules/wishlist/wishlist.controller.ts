@@ -26,6 +26,26 @@ const createWishlist: RequestHandler = async (req, res, next) => {
 	}
 };
 
+const updateReadingList: RequestHandler = async (req, res, next) => {
+	try {
+		const user = req.user;
+		const body = req.body;
+		console.log(body);
+
+		const result = await WishlistService.updateReadingList(user, body);
+
+		sendResponse<IWishlist>(res, {
+			success: true,
+			statusCode: httpStatus.OK,
+			message: "Wishlist Created successfully",
+			meta: null,
+			data: result,
+		});
+	} catch (err) {
+		next(err);
+	}
+};
+
 const getAllWishlist = catchAsync(async (req: Request, res: Response) => {
 	const paginationOptions = pick(req.query, pagination);
 	const user = req.user;
@@ -85,6 +105,7 @@ const deleteWishlist = catchAsync(async (req: Request, res: Response) => {
 
 export const WishlistController = {
 	createWishlist,
+	updateReadingList,
 	getAllWishlist,
 	getSingleWishlist,
 	updateWishlist,

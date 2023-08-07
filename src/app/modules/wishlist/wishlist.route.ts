@@ -6,11 +6,11 @@ import auth from "../../middlewares/auth";
 
 const router = express.Router();
 
+router.post("/list", auth(), WishlistController.updateReadingList);
 router.post("/:id", auth(), WishlistController.createWishlist);
-
 router.get("/:id", WishlistController.getSingleWishlist);
 
-router.patch("/", validateRequest(WishlistValidation.updateWishlistZodSchema), WishlistController.updateWishlist);
+// router.patch("/", validateRequest(WishlistValidation.updateWishlistZodSchema), WishlistController.updateWishlist);
 
 router.delete("/:id", WishlistController.deleteWishlist);
 

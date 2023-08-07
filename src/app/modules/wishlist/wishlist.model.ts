@@ -15,9 +15,20 @@ export const WishlistSchema = new Schema<IWishlist, WishlistModel>(
 				required: true,
 			},
 		],
-		otherList: {
-			type: Object,
-		},
+		otherList: [
+			{
+				bookId: {
+					type: Types.ObjectId,
+					ref: "Book",
+					required: true,
+				},
+				status: {
+					type: String,
+					enum: ["READ_IN_FUTURE", "READING", "COMPLETED_READING"],
+					required: true,
+				},
+			},
+		],
 	},
 	{
 		timestamps: true,
