@@ -99,7 +99,8 @@ const updateReadingList = async (user: JwtPayload, body: { bookId: string; statu
 			if (isWishlistExists.otherList && isIdInArrayObject(isWishlistExists.otherList, bookId)) {
 				if (body.status === "REMOVE") newWishlistAllData = await Wishlist.updateOne({ user: userExist._id }, { $pull: { otherList: { bookId: body.bookId } } }, { new: true });
 				else {
-					(newWishlistAllData = { user: userExist._id, "otherList.bookId": body.bookId }), { $set: { "otherList.$.status": body.status } }, { new: true };
+					console.log("came here");
+					newWishlistAllData = await Wishlist.updateOne({ user: userExist._id, "otherList.bookId": body.bookId }, { $set: { "otherList.$.status": body.status } }, { new: true });
 				}
 			} else {
 				newWishlistAllData = await Wishlist.updateOne({ user: userExist._id }, { $push: { otherList: { bookId: body.bookId, status: body.status } } }, { new: true });
