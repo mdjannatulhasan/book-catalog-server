@@ -46,7 +46,7 @@ const createBook = async (book: IBook): Promise<IBook | null> => {
 };
 
 const getAllBook = async (paginationOptions: IPaginationOptions, filters: IBookFilters): Promise<IGenericResponse<IBook[]> | null> => {
-	const { searchTerm, ...filtersData } = filters;
+	const { searchTerm, year, ...filtersData } = filters;
 
 	const andConditions = [];
 
@@ -60,42 +60,20 @@ const getAllBook = async (paginationOptions: IPaginationOptions, filters: IBookF
 			})),
 		});
 	}
-
-	if (Object.keys(filtersData).length) {
-		if ("minPrice" in filtersData || "maxPrice" in filtersData) {
-			const minPrice = (filtersData as any).minPrice;
-			const maxPrice = (filtersData as any).maxPrice;
-
-			if (typeof minPrice === "string" && typeof maxPrice === "string") {
-				andConditions.push({
-					price: {
-						$gte: minPrice,
-						$lte: maxPrice,
-					},
-				});
-			} else if (typeof minPrice === "string") {
-				andConditions.push({
-					price: {
-						$gte: minPrice,
-					},
-				});
-			} else if (typeof maxPrice === "string") {
-				andConditions.push({
-					price: {
-						$lte: maxPrice,
-					},
-				});
-			}
-			delete (filtersData as any).minPrice;
-			delete (filtersData as any).maxPrice;
-		}
-		if (Object.keys(filtersData).length)
-			andConditions.push({
-				$and: Object.entries(filtersData).map(([field, value]) => ({
-					[field]: value,
-				})),
-			});
+	if (year) {
+		andConditions.push({
+			publicationDate: {
+				$regex: `^${year}`,
+			},
+		});
 	}
+
+	if (Object.keys(filtersData).length)
+		andConditions.push({
+			$and: Object.entries(filtersData).map(([field, value]) => ({
+				[field]: value,
+			})),
+		});
 
 	const { skip, page, limit, sortBy, sortOrder } = paginationHelpers.calculatePagination(paginationOptions);
 

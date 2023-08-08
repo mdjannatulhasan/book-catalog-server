@@ -14,16 +14,13 @@ const UserScema = new Schema<IUser, Record<string, never>, IUserMethods>(
 		name: {
 			firstName: {
 				type: String,
-				required: true,
 			},
 			lastName: {
 				type: String,
-				required: true,
 			},
 		},
 		phoneNumber: {
 			type: String,
-			required: true,
 			unique: true,
 		},
 		email: {
@@ -33,7 +30,6 @@ const UserScema = new Schema<IUser, Record<string, never>, IUserMethods>(
 		},
 		address: {
 			type: String,
-			required: true,
 		},
 	},
 	{

@@ -9,6 +9,8 @@ import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import { ExtendedIUser } from "../users/users.interface";
 
 const loginUser = async (payload: ILoginUser) => {
+	console.log("user login");
+
 	const user = new User();
 	const { email, password } = payload;
 

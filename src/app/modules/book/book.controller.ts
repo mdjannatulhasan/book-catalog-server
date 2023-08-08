@@ -26,6 +26,8 @@ const createBook: RequestHandler = async (req, res, next) => {
 };
 
 const getAllBook = catchAsync(async (req: Request, res: Response) => {
+	console.log(req.query);
+
 	const filterOptions = pick(req.query, bookFilterableFields);
 	const paginationOptions = pick(req.query, pagination);
 
