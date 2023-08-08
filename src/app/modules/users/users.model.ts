@@ -21,7 +21,6 @@ const UserScema = new Schema<IUser, Record<string, never>, IUserMethods>(
 		},
 		phoneNumber: {
 			type: String,
-			unique: true,
 		},
 		email: {
 			type: String,

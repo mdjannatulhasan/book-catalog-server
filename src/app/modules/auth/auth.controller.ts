@@ -7,7 +7,7 @@ import config from "../../../config";
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
 	const { ...loginData } = req.body;
-
+	console.log("User: ", loginData);
 	const result = await AuthService.loginUser(loginData);
 	const { refreshToken, ...others } = result;
 
