@@ -11,8 +11,9 @@ import { IBook, IBookFilters } from "./book.interface";
 const createBook: RequestHandler = async (req, res, next) => {
 	try {
 		const { ...bookData } = req.body;
+		const user = req.user;
 
-		const result = await BookService.createBook(bookData);
+		const result = await BookService.createBook(bookData, user);
 		sendResponse<IBook>(res, {
 			success: true,
 			statusCode: httpStatus.OK,
@@ -27,6 +28,7 @@ const createBook: RequestHandler = async (req, res, next) => {
 
 const getAllBook = catchAsync(async (req: Request, res: Response) => {
 	console.log(req.query);
+	const user = req.user;
 
 	const filterOptions = pick(req.query, bookFilterableFields);
 	const paginationOptions = pick(req.query, pagination);

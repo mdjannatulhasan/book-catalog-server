@@ -10,14 +10,25 @@ import mongoose, { SortOrder } from "mongoose";
 import ApiError from "../../../errors/ApiError";
 import httpStatus from "http-status";
 import { bookSearchableFields } from "./book.constant";
+import { User } from "../users/users.model";
+import { ExtendedIUser, IUser } from "../users/users.interface";
 
-const createBook = async (book: IBook): Promise<IBook | null> => {
+const createBook = async (book: IBook, userInfo: Partial<ITokenInfo>): Promise<IBook | null> => {
 	let newBookAllData = null;
+	console.log(userInfo);
 
 	const session = await mongoose.startSession();
 
 	book.price = book.price || 0;
 	book.code = book.code || "";
+
+	const user = (await User.findOne({ email: userInfo.email })) as IUser;
+
+	console.log(user);
+
+	if (user) {
+		book.addedBy = user;
+	}
 
 	try {
 		session.startTransaction();

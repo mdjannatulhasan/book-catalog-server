@@ -21,6 +21,7 @@ const createUser = async (user: IUser): Promise<IUser | null> => {
 	const session = await mongoose.startSession();
 	try {
 		session.startTransaction();
+		user.role = "user";
 
 		const newUser = await User.create([user], { session });
 

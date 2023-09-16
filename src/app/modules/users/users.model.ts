@@ -30,6 +30,10 @@ const UserScema = new Schema<IUser, Record<string, never>, IUserMethods>(
 		address: {
 			type: String,
 		},
+		role: {
+			type: String,
+			required: true,
+		},
 	},
 	{
 		timestamps: true,

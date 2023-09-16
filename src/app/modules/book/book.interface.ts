@@ -10,7 +10,7 @@ export type IBook = {
 	author: string;
 	genre: string;
 	publicationDate: string;
-	addedBy: Types.ObjectId | IUser;
+	addedBy: IUser;
 };
 export type BookModel = Model<IBook, object>;
 
@@ -22,6 +22,7 @@ export type IBookFilters = {
 export type ITokenInfo = {
 	_id: string;
 	role: string;
+	email: string;
 	iat: number;
 	exp: number;
 };
