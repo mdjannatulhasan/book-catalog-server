@@ -2,6 +2,8 @@
 import { Model, Types } from "mongoose";
 import { IUser } from "../users/users.interface";
 
+export type IBookStatus = "published" | "unpublished" | "pending";
+
 export type IBook = {
 	code: string;
 	title: string;
@@ -10,6 +12,7 @@ export type IBook = {
 	author: string;
 	genre: string;
 	publicationDate: string;
+	status: IBookStatus;
 	addedBy: IUser;
 };
 export type BookModel = Model<IBook, object>;

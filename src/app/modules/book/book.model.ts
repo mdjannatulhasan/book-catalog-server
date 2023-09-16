@@ -33,6 +33,10 @@ export const BookSchema = new Schema<IBook, BookModel>(
 			ref: "User",
 			required: false,
 		},
+		status: {
+			type: String,
+			required: true,
+		},
 	},
 	{
 		timestamps: true,

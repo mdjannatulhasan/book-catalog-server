@@ -30,6 +30,12 @@ const createBook = async (book: IBook, userInfo: Partial<ITokenInfo>): Promise<I
 		book.addedBy = user;
 	}
 
+	if (user.role == "admin" && !book.status) {
+		book.status = "published";
+	} else {
+		book.status = "pending";
+	}
+
 	try {
 		session.startTransaction();
 
@@ -56,8 +62,10 @@ const createBook = async (book: IBook, userInfo: Partial<ITokenInfo>): Promise<I
 	return newBookAllData;
 };
 
-const getAllBook = async (paginationOptions: IPaginationOptions, filters: IBookFilters): Promise<IGenericResponse<IBook[]> | null> => {
+const getAllBook = async (paginationOptions: IPaginationOptions, filters: IBookFilters, userInfo: Partial<ITokenInfo>): Promise<IGenericResponse<IBook[]> | null> => {
 	const { searchTerm, year, ...filtersData } = filters;
+
+	const user = (await User.findOne({ email: userInfo?.email })) as IUser;
 
 	const andConditions = [];
 
@@ -96,6 +104,70 @@ const getAllBook = async (paginationOptions: IPaginationOptions, filters: IBookF
 
 	const conditions = andConditions.length > 0 ? { $and: andConditions } : {};
 
+	if (user?.role !== "admin") {
+		(conditions as any).status = "published";
+	}
+
+	const result = await Book.find(conditions).sort(sortConditions).skip(skip).limit(limit);
+
+	const total = await Book.countDocuments(conditions);
+
+	return {
+		data: result,
+		meta: {
+			page: Number(page),
+			limit: Number(limit),
+			total,
+		},
+	};
+};
+
+const getMyBooks = async (paginationOptions: IPaginationOptions, filters: IBookFilters, userInfo: Partial<ITokenInfo>): Promise<IGenericResponse<IBook[]> | null> => {
+	const { searchTerm, year, ...filtersData } = filters;
+
+	const user = (await User.findOne({ email: userInfo?.email })) as ExtendedIUser;
+
+	const andConditions = [];
+
+	if (searchTerm) {
+		andConditions.push({
+			$or: bookSearchableFields.map((field) => ({
+				[field]: {
+					$regex: searchTerm,
+					$options: "i",
+				},
+			})),
+		});
+	}
+	if (year) {
+		andConditions.push({
+			publicationDate: {
+				$regex: `^${year}`,
+			},
+		});
+	}
+
+	if (Object.keys(filtersData).length)
+		andConditions.push({
+			$and: Object.entries(filtersData).map(([field, value]) => ({
+				[field]: value,
+			})),
+		});
+
+	const { skip, page, limit, sortBy, sortOrder } = paginationHelpers.calculatePagination(paginationOptions);
+
+	const sortConditions: { [key: string]: SortOrder } = {};
+
+	if (sortBy && sortConditions) {
+		sortConditions[sortBy] = sortOrder;
+	}
+
+	const conditions = andConditions.length > 0 ? { $and: andConditions } : {};
+
+	if (user?.role !== "admin") {
+		(conditions as any).addedBy = user._id;
+	}
+
 	const result = await Book.find(conditions).sort(sortConditions).skip(skip).limit(limit);
 
 	const total = await Book.countDocuments(conditions);
@@ -123,9 +195,15 @@ const updateBook = async (id: string, payload: Partial<IBook>, userInfo: Partial
 		throw new ApiError(httpStatus.NOT_FOUND, "Book not found!");
 	}
 
-	// if (isExist?.addedBy.toString() !== userInfo._id) {
-	// 	throw new ApiError(httpStatus.FORBIDDEN, "Only owner can modify the information");
-	// }
+	const user = (await User.findOne({ email: userInfo.email })) as ExtendedIUser;
+
+	if (user.role != "admin" && payload.status) {
+		payload.status = "pending";
+	}
+
+	if (isExist?.addedBy.toString() !== user._id.toString() && user.role != "admin") {
+		throw new ApiError(httpStatus.FORBIDDEN, "Only owner can modify the information");
+	}
 
 	// if (payload.addedBy) {
 	// 	const isSeller = await User.findById(payload.seller);
@@ -144,10 +222,11 @@ const deleteBook = async (id: string, userInfo: Partial<ITokenInfo>): Promise<IB
 	if (!isExist) {
 		throw new ApiError(httpStatus.NOT_FOUND, "Book not found!");
 	}
+	const user = (await User.findOne({ email: userInfo.email })) as IUser;
 
-	// if (isExist?.addedBy.toString() !== userInfo._id) {
-	// 	throw new ApiError(httpStatus.FORBIDDEN, "Only owner can remove this book");
-	// }
+	if (isExist?.addedBy.toString() !== userInfo._id || user.role !== "admin") {
+		throw new ApiError(httpStatus.FORBIDDEN, "Only owner can remove this book");
+	}
 
 	const result = await Book.findByIdAndDelete(id);
 
@@ -157,6 +236,7 @@ const deleteBook = async (id: string, userInfo: Partial<ITokenInfo>): Promise<IB
 export const BookService = {
 	createBook,
 	getAllBook,
+	getMyBooks,
 	getSingleBook,
 	updateBook,
 	deleteBook,

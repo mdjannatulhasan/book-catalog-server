@@ -29,11 +29,29 @@ const createBook: RequestHandler = async (req, res, next) => {
 const getAllBook = catchAsync(async (req: Request, res: Response) => {
 	console.log(req.query);
 	const user = req.user;
+	console.log(user, "User from get all book");
 
 	const filterOptions = pick(req.query, bookFilterableFields);
 	const paginationOptions = pick(req.query, pagination);
 
-	const result = await BookService.getAllBook(paginationOptions, filterOptions as IBookFilters);
+	const result = await BookService.getAllBook(paginationOptions, filterOptions as IBookFilters, user);
+
+	sendResponse<IBook[]>(res, {
+		statusCode: httpStatus.OK,
+		success: true,
+		message: "Books retrived successfully",
+		meta: result?.meta || null,
+		data: result?.data,
+	});
+});
+const getMyBooks = catchAsync(async (req: Request, res: Response) => {
+	const user = req.user;
+	console.log(user, "User from get all book");
+
+	const filterOptions = pick(req.query, bookFilterableFields);
+	const paginationOptions = pick(req.query, pagination);
+
+	const result = await BookService.getMyBooks(paginationOptions, filterOptions as IBookFilters, user);
 
 	sendResponse<IBook[]>(res, {
 		statusCode: httpStatus.OK,
@@ -64,6 +82,8 @@ const updateBook = catchAsync(async (req: Request, res: Response) => {
 	const updatedData = req.body as Partial<IBook>;
 	const user = req.user;
 
+	console.log(user, "User from update");
+
 	const result = await BookService.updateBook(id, updatedData, user);
 
 	sendResponse<IBook>(res, {
@@ -93,4 +113,5 @@ export const BookController = {
 	getSingleBook,
 	updateBook,
 	deleteBook,
+	getMyBooks,
 };

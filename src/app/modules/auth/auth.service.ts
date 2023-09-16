@@ -6,7 +6,7 @@ import { ILoginUser } from "./auth.interface";
 import { User } from "../users/users.model";
 import jwt, { JwtPayload, Secret } from "jsonwebtoken";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
-import { ExtendedIUser } from "../users/users.interface";
+import { ExtendedIUser, IUser } from "../users/users.interface";
 
 const loginUser = async (payload: ILoginUser) => {
 	console.log("user login");
@@ -34,23 +34,21 @@ const loginUser = async (payload: ILoginUser) => {
 	}
 	const accessToken = jwtHelpers.createToken(
 		{
+			id: isUserExists._id,
 			email: isUserExists.email,
+			role: isUserExists.role,
 		},
 		config.jwt.secret as Secret,
 		{
 			expiresIn: config.jwt.expires_in,
 		}
 	);
-	const refreshToken = jwtHelpers.createToken(
-		{
-			email: isUserExists.email,
-		},
-		config.jwt.refresh_secret as Secret,
-		{
-			expiresIn: config.jwt.refresh_expires_in,
-		}
-	);
+	const refreshToken = jwtHelpers.createToken({ id: isUserExists._id, email: isUserExists.email, role: isUserExists.role }, config.jwt.refresh_secret as Secret, {
+		expiresIn: config.jwt.refresh_expires_in,
+	});
 	return {
+		id: isUserExists._id,
+		role: isUserExists.role,
 		accessToken,
 		refreshToken,
 	};
@@ -67,22 +65,16 @@ const refreshToken = async (token: string) => {
 
 	const { email } = verifiedToken;
 
-	const isUserExists = user.isUserExists(email);
+	const isUserExists = (await user.isUserExists(email)) as ExtendedIUser;
 	console.log(isUserExists);
 
 	if (!isUserExists) {
 		throw new ApiError(httpStatus.NOT_FOUND, "User does not exist");
 	}
 
-	const accessToken = jwtHelpers.createToken(
-		{
-			email: email,
-		},
-		config.jwt.refresh_secret as Secret,
-		{
-			expiresIn: config.jwt.refresh_expires_in,
-		}
-	);
+	const accessToken = jwtHelpers.createToken({ id: isUserExists._id, email: email, role: isUserExists.role }, config.jwt.refresh_secret as Secret, {
+		expiresIn: config.jwt.refresh_expires_in,
+	});
 	return {
 		accessToken: accessToken,
 	};
